@@ -124,6 +124,7 @@ class Experiment():
         self.index_to_time_of_day_dict = experiment_params.get('index_to_time_of_day_dict')
         self.forecast_flag = experiment_params.get('forecast_flag')
         self.n_percent_honesty = experiment_params.get('n_percent_honesty')
+        self.which_avg_param = experiment_params.get('which_avg_param')
             
         # Initialize q-value table    
         self.Q = self.initialize_action_value()
