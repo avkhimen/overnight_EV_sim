@@ -16,7 +16,7 @@ def get_input_args():
                         help = 'id of run')
     parser.add_argument('--pen', type = float, default = 0.1,
                         help = 'market penetration of evs')
-    parser.add_argument('--avg', type = int, default = 1,
+    parser.add_argument('--avg_param', type = int, default = 1,
                         help = 'if avg == 1, non-one avg and non-zero max are used')
     return parser.parse_args()
 
@@ -24,6 +24,7 @@ def get_input_args():
 n_episodes = get_input_args().n
 id_run = get_input_args().id_run
 pen = get_input_args().pen
+avg = get_input_args().avg_param
 
 # Get Alberta Average demand and prices
 df = pd.read_csv('AESO_2020_demand_price.csv')
