@@ -24,6 +24,7 @@ def get_input_args():
 n_episodes = get_input_args().n
 id_run = get_input_args().id_run
 pen = get_input_args().pen
+avg = get_input_args().avg_param
 
 # Get Alberta Average demand and prices
 df = pd.read_csv('AESO_2020_demand_price.csv')
