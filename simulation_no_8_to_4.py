@@ -24,7 +24,6 @@ def get_input_args():
 n_episodes = get_input_args().n
 id_run = get_input_args().id_run
 pen = get_input_args().pen
-avg = get_input_args().avg_param
 
 # Get Alberta Average demand and prices
 df = pd.read_csv('AESO_2020_demand_price.csv')
@@ -87,7 +86,7 @@ experiment_params = {'n_episodes': n_episodes,
                      'alberta_average_demand': alberta_avg_demand,
                      'index_to_time_of_day_dict': index_to_time_of_day_dict,
                      'forecast_flag': forecast_flag,
-                     'n_percent_honesty': n_percent_honesty,
+                     'n_percent_honesty': n_percent_honesty
                      'which_avg_param': avg
                     }
 
@@ -124,7 +123,6 @@ class Experiment():
         self.index_to_time_of_day_dict = experiment_params.get('index_to_time_of_day_dict')
         self.forecast_flag = experiment_params.get('forecast_flag')
         self.n_percent_honesty = experiment_params.get('n_percent_honesty')
-        self.which_avg_param = experiment_params.get('which_avg_param')
             
         # Initialize q-value table    
         self.Q = self.initialize_action_value()
@@ -181,16 +179,12 @@ class Experiment():
             
             # Repeat for every hour in the number of hours
             for hour in range(0, self.n_hours):
-
-                if self.index_to_time_of_day_dict[hour] in [3,4,5,6,7]:
-                    percent_honest = '0.75'
-                    next_percent_honest = '0.75'
+                
+                # Calculate the percent honesty for the next hour
+                if forecast_flag:
+                    next_percent_honest = np.random.choice(self.n_percent_honesty, p = [0.25, 0.25, 0.25, 0.25])
                 else:
-                    # Calculate the percent honesty for the next hour
-                    if forecast_flag:
-                        next_percent_honest = np.random.choice(self.n_percent_honesty, p = [0.25, 0.25, 0.25, 0.25])
-                    else:
-                        next_percent_honest = np.random.choice(self.n_percent_honesty)
+                    next_percent_honest = np.random.choice(self.n_percent_honesty)
                     
                 # Get the SOC division for each EV
                 soc_div_index = self.v_get_soc_bin(self.soc_of_evs)
@@ -229,11 +223,11 @@ class Experiment():
 
                         if action == 0:
                             self.soc_of_evs, charging_load_index = self.v_get_soc_and_charging_load(soc_bin, self.soc_of_evs, soc_div_index, status_evs, soc_reduction_for_evs)
-                            charging_load = self.charging_soc_addition_per_time_unit_per_ev * charging_load_index.sum()
+                            charging_load = self.charging_soc_mw_addition_to_demand_per_time_unit_per_ev * charging_load_index.sum()
 
                         elif action == 1:
                             self.soc_of_evs, discharging_load_index = self.v_get_soc_and_discharging_load(soc_bin, self.soc_of_evs, soc_div_index, status_evs, soc_reduction_for_evs)
-                            discharging_load = self.charging_soc_addition_per_time_unit_per_ev * discharging_load_index.sum()
+                            discharging_load = self.discharging_soc_mw_reduction_from_demand_per_time_unit_per_ev * discharging_load_index.sum()
                         else:
                             self.soc_of_evs = self.v_get_soc_from_driving(soc_bin, self.soc_of_evs, soc_div_index, status_evs, soc_reduction_for_evs)
 
@@ -249,11 +243,11 @@ class Experiment():
 
                         if action == 0:
                             self.soc_of_evs, charging_load_index = self.v_get_soc_and_charging_load(soc_bin, self.soc_of_evs, soc_div_index, status_evs, soc_reduction_for_evs)
-                            charging_load = self.charging_soc_addition_per_time_unit_per_ev * charging_load_index.sum()
+                            charging_load = self.charging_soc_mw_addition_to_demand_per_time_unit_per_ev * charging_load_index.sum()
 
                         elif action == 1:
                             self.soc_of_evs, discharging_load_index = self.v_get_soc_and_discharging_load(soc_bin, self.soc_of_evs, soc_div_index, status_evs, soc_reduction_for_evs)
-                            discharging_load = self.charging_soc_addition_per_time_unit_per_ev * discharging_load_index.sum()
+                            discharging_load = self.discharging_soc_mw_reduction_from_demand_per_time_unit_per_ev * discharging_load_index.sum()
                         else:
                             self.soc_of_evs = self.v_get_soc_from_driving(soc_bin, self.soc_of_evs, soc_div_index, status_evs, soc_reduction_for_evs)
 
