@@ -87,7 +87,7 @@ experiment_params = {'n_episodes': n_episodes,
                      'alberta_average_demand': alberta_avg_demand,
                      'index_to_time_of_day_dict': index_to_time_of_day_dict,
                      'forecast_flag': forecast_flag,
-                     'n_percent_honesty': n_percent_honesty
+                     'n_percent_honesty': n_percent_honesty,
                      'which_avg_param': avg
                     }
 
