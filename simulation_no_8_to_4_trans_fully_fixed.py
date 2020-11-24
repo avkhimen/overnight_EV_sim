@@ -178,11 +178,11 @@ class Experiment():
             
             # Repeat for every hour in the number of hours
             for hour in range(0, self.n_hours):
-                print('\n', 'Hour is: ', hour)
+                #print('\n', 'Hour is: ', hour)
 
                 # Calculate the percent honesty of people 
                 percent_honest = self.last_percent_honest
-                print('Percent honest: ', percent_honest)
+                #print('Percent honest: ', percent_honest)
                 
                 if forecast_flag:
                     next_percent_honest = np.random.choice(self.n_percent_honesty, p = [0.25, 0.25, 0.25, 0.25])
@@ -191,7 +191,7 @@ class Experiment():
                         next_percent_honest = self.n_percent_honesty[-1]
                     else:
                         next_percent_honest = np.random.choice(self.n_percent_honesty)
-                print('Next percent honest: ', next_percent_honest)
+                #print('Next percent honest: ', next_percent_honest)
                     
                 # Get the SOC division for each EV
                 soc_div_index = self.v_get_soc_bin(self.soc_of_evs)
