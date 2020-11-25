@@ -4,7 +4,6 @@ from pprint import pprint
 import pandas as pd
 import pdb
 import argparse
-import os
 
 def get_input_args():
     """
@@ -128,7 +127,7 @@ class Experiment():
         self.which_avg_param = experiment_params.get('which_avg_param')
             
         # Initialize q-value table    
-        self.Q = self.initialize_action_value()
+        self.Q = np.load('15000_pen01_fully_fixed_run2_Q.npy')
 
         self.v_get_soc_bin = np.vectorize(self.get_soc_bin)
         self.v_get_soc_and_charging_load = np.vectorize(self.get_soc_and_charging_load)
@@ -170,7 +169,6 @@ class Experiment():
         self.PAR_list = []
         self.max_load_list = []
         self.Q_change_list = []
-        self.Q_list = []
 
         # Repeat for every episode
         for episode in tqdm(range(self.n_episodes), ncols=100):
@@ -180,11 +178,9 @@ class Experiment():
             
             # Repeat for every hour in the number of hours
             for hour in range(0, self.n_hours):
-                #print('\n', 'Hour is: ', hour)
-
+                
                 # Calculate the percent honesty of people 
                 percent_honest = self.last_percent_honest
-                #print('Percent honest: ', percent_honest)
                 
                 if forecast_flag:
                     next_percent_honest = np.random.choice(self.n_percent_honesty, p = [0.25, 0.25, 0.25, 0.25])
@@ -193,7 +189,6 @@ class Experiment():
                         next_percent_honest = self.n_percent_honesty[-1]
                     else:
                         next_percent_honest = np.random.choice(self.n_percent_honesty)
-                #print('Next percent honest: ', next_percent_honest)
                     
                 # Get the SOC division for each EV
                 soc_div_index = self.v_get_soc_bin(self.soc_of_evs)
@@ -283,8 +278,7 @@ class Experiment():
                 
                 # Calculate the PAR ratio, the reward, the average
                 # and the penalty
-                #pdb.set_trace()
-                average = ((hour + 9) * self.last_average + total_load) / (hour + 1 + 9)
+                average = ((hour + 1 - 1) * self.last_average + total_load) / (hour + 1)
                 average_charge_penalty = self.get_final_soc_penalty(hour)
                 new_max_load =  max(total_load, self.last_max_load)
                 if average > 0:
@@ -314,8 +308,6 @@ class Experiment():
 
             # print stats
             print('\n')
-            print('Run name: ', id_run)
-            print('Path and file: ', os.path.abspath(__file__))
             print('Last max load: ', self.last_max_load)
             print('Last average: ', self.last_average)
             print('Reward: ', reward)
@@ -328,8 +320,6 @@ class Experiment():
             self.max_load_list.append(new_max_load)
             self.Q_change_list.append(self.compare_Q())
             self.last_Q = self.Q.copy()
-            if episode % 1000 == 0:
-                self.Q_list.append(self.Q.copy())
         
         #print(self.Q)
         # Save statistics
@@ -339,7 +329,6 @@ class Experiment():
         np.save(id_run + '_PAR_list.npy', self.PAR_list)
         np.save(id_run + '_max_list.npy', self.max_load_list)
         np.save(id_run + '_Q_change_list.npy', self.Q_change_list)
-        np.save(id_run + '_Q_list.npy', self.Q_list)
 
     # Initialize action-values array
     def initialize_action_value(self):
