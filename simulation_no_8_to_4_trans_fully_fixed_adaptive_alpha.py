@@ -298,16 +298,17 @@ class Experiment():
                 
                 # Update the qction-value function for each
                 # SOC division, hour, and percent honesty
+                ada_alpha = self.alpha/((episode + 1)/1000)
                 for soc_bin in range(0, self.n_divisions_for_soc):
 
                     if hour < self.n_hours - 1:
                         delta = (reward 
                                  + self.gamma * np.max(self.Q[soc_bin][next_hour][int(float(next_percent_honest)/0.25-1)])
                                  - self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]])
-                        self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]] += self.alpha * delta
+                        self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]] += ada_alpha * delta
                     else:
                         delta = reward - self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]]
-                        self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]] += self.alpha * delta
+                        self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]] += ada_alpha * delta
                 
                 # Store the total load, PAR, and
                 # last percent honest

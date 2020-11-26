@@ -21,6 +21,8 @@ def get_input_args():
                         help = 'if avg == 1, non-one avg and non-zero max are used')
     parser.add_argument('--alpha', type = float, default = 0.01,
                         help = 'alpha for learning')
+    parser.add_argument('--scale', type = int, default = 1,
+                        help = 'scale')
     return parser.parse_args()
 
 # Get args
@@ -29,6 +31,7 @@ id_run = get_input_args().id_run
 pen = get_input_args().pen
 avg = get_input_args().avg_param
 alpha = get_input_args().alpha
+scale = get_input_args().scale
 
 # Get Alberta Average demand and prices
 df = pd.read_csv('AESO_2020_demand_price.csv')
@@ -44,7 +47,7 @@ df = df.groupby('HE', as_index=True).mean()
 df_to_plot = df.drop(df.columns[[0]], axis = 1)
 
 alberta_avg_power_price = np.array(df.iloc[:, 0])
-alberta_avg_demand = np.array(df.iloc[:, 1])
+alberta_avg_demand = np.array(df.iloc[:, 1])/scale
 
 # https://open.alberta.ca/dataset/d6205817-b04b-4360-8bb0-79eaaecb9df9/
 # resource/4a06c219-03d1-4027-9c1f-a383629ab3bc/download/trans-motorized-
@@ -81,7 +84,7 @@ experiment_params = {'n_episodes': n_episodes,
                      'alpha': alpha,
                      'epsilon': 0.1,
                      'gamma': 1,
-                     'total_cars_in_alberta': 1000000,
+                     'total_cars_in_alberta': 1000000/scale,
                      'ev_market_penetration': pen,
                      'charging_soc_addition_per_time_unit_per_ev': 0.15, 
                      'discharging_soc_reduction_per_time_unit_per_ev': 0.15, 
@@ -153,8 +156,8 @@ class Experiment():
         
         # Initialize the last total load and average
         if  self.which_avg_param == 1:
-            self.last_max_load = 10139.13 #alberta_avg_demand[8:17].max()
-            self.last_average = 10052.55 #alberta_avg_demand[8:17].mean()
+            self.last_max_load = 10139.13/scale #alberta_avg_demand[8:17].max()
+            self.last_average = 10052.55/scale #alberta_avg_demand[8:17].mean()
         else:
             self.last_max_load = 0 #alberta_avg_demand[8:17].max()
             self.last_average = 1 #alberta_avg_demand[8:17].mean()
