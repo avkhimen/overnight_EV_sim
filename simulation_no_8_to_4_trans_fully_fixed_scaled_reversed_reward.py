@@ -4,13 +4,14 @@ from pprint import pprint
 import pandas as pd
 import pdb
 import argparse
+import os
 
 def get_input_args():
     """
     Returns input arguments for main file execution
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument('--n', type = int, default = 500,
+    parser.add_argument('--n', type = int, default = 10,
                         help = 'Number of episodes to run')
     parser.add_argument('--id_run', type = str, default = 'test_run',
                         help = 'id of run')
@@ -20,7 +21,7 @@ def get_input_args():
                         help = 'if avg == 1, non-one avg and non-zero max are used')
     parser.add_argument('--alpha', type = float, default = 0.01,
                         help = 'alpha for learning')
-    parser.add_argument('--scale', type = int, default = 1000,
+    parser.add_argument('--scale', type = int, default = 1,
                         help = 'scale')
     return parser.parse_args()
 
@@ -80,7 +81,7 @@ experiment_params = {'n_episodes': n_episodes,
                      'n_divisions_for_percent_honesty': 3,
                      'max_soc_allowed': 1,
                      'min_soc_allowed': 0.1,
-                     'alpha': 0.01,
+                     'alpha': alpha,
                      'epsilon': 0.1,
                      'gamma': 1,
                      'total_cars_in_alberta': 1000000/scale,
@@ -133,7 +134,7 @@ class Experiment():
         self.which_avg_param = experiment_params.get('which_avg_param')
             
         # Initialize q-value table    
-        self.Q = np.load('final_presentation/Q_value/' + str(pen) + '.npy')
+        self.Q = self.initialize_action_value()
 
         self.v_get_soc_bin = np.vectorize(self.get_soc_bin)
         self.v_get_soc_and_charging_load = np.vectorize(self.get_soc_and_charging_load)
@@ -175,8 +176,7 @@ class Experiment():
         self.PAR_list = []
         self.max_load_list = []
         self.Q_change_list = []
-        self.evs_mean_list = []
-        self.load_episode_list = []
+        self.Q_list = []
 
         # Repeat for every episode
         for episode in tqdm(range(self.n_episodes), ncols=100):
@@ -184,15 +184,10 @@ class Experiment():
             # Initialize the experiment
             self.start_experiment()
             
-            # Calculate the percent honesty of people 
-            #percent_honest = np.random.choice(self.n_percent_honesty) #self.last_percent_honest
-            
-            
-            #Initialize load list
-            load_list = []
             # Repeat for every hour in the number of hours
             for hour in range(0, self.n_hours):
-                
+                #print('\n', 'Hour is: ', hour)
+
                 # Calculate the percent honesty of people 
                 percent_honest = self.last_percent_honest
                 #print('Percent honest: ', percent_honest)
@@ -204,6 +199,7 @@ class Experiment():
                         next_percent_honest = self.n_percent_honesty[-1]
                     else:
                         next_percent_honest = np.random.choice(self.n_percent_honesty)
+                #print('Next percent honest: ', next_percent_honest)
                     
                 # Get the SOC division for each EV
                 soc_div_index = self.v_get_soc_bin(self.soc_of_evs)
@@ -291,8 +287,6 @@ class Experiment():
                 # power demand with the additional demand from EVs
                 total_load = max(total_load + self.alberta_average_demand[self.index_to_time_of_day_dict[hour]], 0)
                 
-                load_list.append(scale * total_load)
-                
                 # Calculate the PAR ratio, the reward, the average
                 # and the penalty
                 #pdb.set_trace()
@@ -307,16 +301,16 @@ class Experiment():
                 
                 # Update the qction-value function for each
                 # SOC division, hour, and percent honesty
-#                 for soc_bin in range(0, self.n_divisions_for_soc):
+                for soc_bin in range(0, self.n_divisions_for_soc):
 
-#                     if hour < self.n_hours - 1:
-#                         delta = (reward 
-#                                  + self.gamma * np.max(self.Q[soc_bin][next_hour][int(float(next_percent_honest)/0.25-1)])
-#                                  - self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]])
-#                         self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]] += self.alpha * delta
-#                     else:
-#                         delta = reward - self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]]
-#                         self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]] += self.alpha * delta
+                    if hour < self.n_hours - 1:
+                        delta = (reward 
+                                 + self.gamma * np.max(self.Q[soc_bin][next_hour][int(float(next_percent_honest)/0.25-1)])
+                                 - self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]])
+                        self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]] += self.alpha * delta
+                    else:
+                        delta = reward - self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]]
+                        self.Q[soc_bin][hour][int(float(percent_honest)/0.25-1)][div_to_action_dict[soc_bin][0]] += self.alpha * delta
                 
                 # Store the total load, PAR, and
                 # last percent honest
@@ -326,35 +320,32 @@ class Experiment():
 
             # print stats
             print('\n')
+            print('Run name: ', id_run)
+            print('Path and file: ', os.path.abspath(__file__))
             print('Last max load: ', self.last_max_load)
             print('Last average: ', self.last_average)
             print('Reward: ', reward)
             print('PAR: ', PAR)
-            print('EVs mean SOC: ', self.soc_of_evs.mean())
 
             # Record stats
             self.reward_list.append(reward)
-#             self.average_list.append(average)
+            self.average_list.append(average)
             self.PAR_list.append(PAR)
-            self.evs_mean_list.append(np.array(self.soc_of_evs).mean())
-            self.load_episode_list.append(load_list)
-#             self.max_load_list.append(new_max_load)
-#             self.Q_change_list.append(self.compare_Q())
-#             self.last_Q = self.Q.copy()
+            self.max_load_list.append(new_max_load)
+            self.Q_change_list.append(self.compare_Q())
+            self.last_Q = self.Q.copy()
+            if episode % 1000 == 0:
+                self.Q_list.append(self.Q.copy())
         
         #print(self.Q)
         # Save statistics
-#         np.save(id_run + '_reward_list.npy', self.reward_list)
-#         np.save(id_run + '_average_list.npy', self.average_list)
-#         np.save(id_run + '_Q.npy', self.Q)
-#         np.save(id_run + '_PAR_list.npy', self.PAR_list)
-#         np.save(id_run + '_max_list.npy', self.max_load_list)
-#         np.save(id_run + '_Q_change_list.npy', self.Q_change_list)
-        print(f'Mean reward over {self.n_episodes} episodes is: ', np.array(self.reward_list).mean())
-        print(f'Mean PAR over {self.n_episodes} episodes is: ', np.array(self.PAR_list).mean())
-        print(f'Mean EV SOC over {self.n_episodes} episodes is: ', np.array(self.evs_mean_list).mean())
-        print(f'Mean load list over {self.n_episodes} episodes is: ', np.append(scale * self.alberta_average_demand[8:17], np.array(self.load_episode_list).mean(axis = 0)))
-        #print(f'Average alberta demand is: ', scale * self.alberta_average_demand[8:17])
+        np.save(id_run + '_reward_list.npy', self.reward_list)
+        np.save(id_run + '_average_list.npy', self.average_list)
+        np.save(id_run + '_Q.npy', self.Q)
+        np.save(id_run + '_PAR_list.npy', self.PAR_list)
+        np.save(id_run + '_max_list.npy', self.max_load_list)
+        np.save(id_run + '_Q_change_list.npy', self.Q_change_list)
+        np.save(id_run + '_Q_list.npy', self.Q_list)
 
     # Initialize action-values array
     def initialize_action_value(self):
@@ -483,9 +474,9 @@ class Experiment():
         if hour >= 12 and hour < 15:
             mu = np.mean(self.soc_of_evs)
             if mu >= 0.48 - (14 - hour) * self.charging_soc_addition_per_time_unit_per_ev:
-                penalty = 3
-            else:
                 penalty = -1
+            else:
+                penalty = -3
 
         return penalty
 

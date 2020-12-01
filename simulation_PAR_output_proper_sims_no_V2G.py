@@ -187,7 +187,6 @@ class Experiment():
             # Calculate the percent honesty of people 
             #percent_honest = np.random.choice(self.n_percent_honesty) #self.last_percent_honest
             
-            
             #Initialize load list
             load_list = []
             # Repeat for every hour in the number of hours
@@ -229,7 +228,7 @@ class Experiment():
                     
                     # Choose an action using a policy 
                     # (ex: epsilon-greedy)
-                    action = self.choose_action(Q)
+                    action = 0
                     
                     # Calculate the load for each SOC division
                     if self.index_to_time_of_day_dict[hour] in [17,18,19,20,21,22,23,0,1,2]:
@@ -350,11 +349,11 @@ class Experiment():
 #         np.save(id_run + '_PAR_list.npy', self.PAR_list)
 #         np.save(id_run + '_max_list.npy', self.max_load_list)
 #         np.save(id_run + '_Q_change_list.npy', self.Q_change_list)
-        print(f'Mean reward over {self.n_episodes} episodes is: ', np.array(self.reward_list).mean())
-        print(f'Mean PAR over {self.n_episodes} episodes is: ', np.array(self.PAR_list).mean())
-        print(f'Mean EV SOC over {self.n_episodes} episodes is: ', np.array(self.evs_mean_list).mean())
+        print(f'Mean reward over {self.n_episodes} is: ', np.array(self.reward_list).mean())
+        print(f'Mean PAR over {self.n_episodes} is: ', np.array(self.PAR_list).mean())
+        print(f'Mean EV SOC over {self.n_episodes} is: ', np.array(self.evs_mean_list).mean())
+        #print(f'Mean load list over {self.n_episodes} is: ', np.array(self.load_episode_list).mean(axis = 0))
         print(f'Mean load list over {self.n_episodes} episodes is: ', np.append(scale * self.alberta_average_demand[8:17], np.array(self.load_episode_list).mean(axis = 0)))
-        #print(f'Average alberta demand is: ', scale * self.alberta_average_demand[8:17])
 
     # Initialize action-values array
     def initialize_action_value(self):
