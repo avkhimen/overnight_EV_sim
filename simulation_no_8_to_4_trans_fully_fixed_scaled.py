@@ -140,6 +140,7 @@ class Experiment():
         self.v_get_soc_and_charging_load = np.vectorize(self.get_soc_and_charging_load)
         self.v_get_soc_and_discharging_load = np.vectorize(self.get_soc_and_discharging_load)
         self.v_get_soc_from_driving = np.vectorize(self.get_soc_from_driving)
+        self.v_get_soc_of_evs = np.vectorize(self.get_soc_of_evs)
         
         # Display params
         print('Experiment parameters are: ')
@@ -153,6 +154,7 @@ class Experiment():
              
         # Initialize an array of SOCs for each EV
         self.soc_of_evs = abs(np.random.normal(0.3, 0.1, int(self.num_of_evs)))
+        self.soc_of_evs = self.v_get_soc_of_evs(self.soc_of_evs)
         
         # Initialize the last total load and average
         if  self.which_avg_param == 1:
@@ -339,13 +341,13 @@ class Experiment():
         
         #print(self.Q)
         # Save statistics
-        np.save(id_run + '_reward_list.npy', self.reward_list)
-        np.save(id_run + '_average_list.npy', self.average_list)
-        np.save(id_run + '_Q.npy', self.Q)
-        np.save(id_run + '_PAR_list.npy', self.PAR_list)
-        np.save(id_run + '_max_list.npy', self.max_load_list)
-        np.save(id_run + '_Q_change_list.npy', self.Q_change_list)
-        np.save(id_run + '_Q_list.npy', self.Q_list)
+        np.save('average_runs/' + id_run + '_reward_list.npy', self.reward_list)
+        np.save('average_runs/' + id_run + '_average_list.npy', self.average_list)
+        np.save('average_runs/' + id_run + '_Q.npy', self.Q)
+        np.save('average_runs/' + id_run + '_PAR_list.npy', self.PAR_list)
+        np.save('average_runs/' + id_run + '_max_list.npy', self.max_load_list)
+        np.save('average_runs/' + id_run + '_Q_change_list.npy', self.Q_change_list)
+        np.save('average_runs/' + id_run + '_Q_list.npy', self.Q_list)
 
     # Initialize action-values array
     def initialize_action_value(self):
@@ -503,6 +505,20 @@ class Experiment():
             change_sum += np.count_nonzero(l_Q1-l_Q2)
         
         return change_sum
+    
+    def get_soc_of_evs(self, x):
+        if x > 1:
+            return 1
+        elif x < 0:
+            return 0
+        else:
+            return x
+        
+#         for ii, ev in enumerate(self.soc_of_evs):
+#             if ev > 1:
+#                 self.soc_of_evs[ii] = 1.0
+#             elif ev < 0:
+#                 self.soc_of_evs[ii] = 0.0
 
 if __name__ == '__main__':
     # Run experiment
